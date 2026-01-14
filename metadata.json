@@ -1,0 +1,5 @@
+{
+  "name": "GoldPulse AI - XAU/USD Analysis Platform",
+  "description": "A high-end professional trading analysis platform for XAU/USD (Gold). It provides support & resistance-based trade planning using Gemini AI with Google Search grounding for real-time market context.",
+  "requestFramePermissions": []
+}
