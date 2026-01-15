@@ -5,8 +5,10 @@ import Sidebar from './components/Sidebar';
 import TradingViewWidget from './components/TradingViewWidget';
 import AnalysisPanel from './components/AnalysisPanel';
 import TradePlanCard from './components/TradePlanCard';
-import { UserPreferences, RiskPreference, MarketAnalysis, TradePlan } from './types';
+import { UserPreferences, RiskPreference, MarketAnalysis, TradePlan, AnalysisHistoryItem } from './types';
 import { analyzeGoldMarket } from './services/geminiService';
+
+const STORAGE_KEY = 'goldpulse_history';
 
 const App: React.FC = () => {
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -19,6 +21,25 @@ const App: React.FC = () => {
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
+
+  // Load history from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    }
+  }, []);
+
+  // Save history to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  }, [history]);
 
   const handleAnalyze = useCallback(async () => {
     setIsLoading(true);
@@ -29,8 +50,18 @@ const App: React.FC = () => {
         preferences.riskPreference,
         preferences.profitTarget
       );
+      
+      const newHistoryItem: AnalysisHistoryItem = {
+        id: result.analysis.id,
+        timestamp: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        analysis: result.analysis,
+        plan: result.plan,
+        preferences: { ...preferences }
+      };
+
       setAnalysis(result.analysis);
       setPlan(result.plan);
+      setHistory(prev => [newHistoryItem, ...prev].slice(0, 20)); // Keep last 20
     } catch (err) {
       setError("Analysis failed. Please check market connection.");
       console.error(err);
@@ -38,6 +69,21 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [preferences]);
+
+  const handleSelectHistory = useCallback((item: AnalysisHistoryItem) => {
+    setAnalysis(item.analysis);
+    setPlan(item.plan);
+    setPreferences(item.preferences);
+  }, []);
+
+  const handleDeleteHistory = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHistory(prev => prev.filter(item => item.id !== id));
+    if (analysis?.id === id) {
+      setAnalysis(null);
+      setPlan(null);
+    }
+  }, [analysis]);
 
   return (
     <div className="h-screen flex flex-col bg-[#0a0a0a]">
@@ -49,6 +95,10 @@ const App: React.FC = () => {
           setPreferences={setPreferences} 
           onAnalyze={handleAnalyze}
           isLoading={isLoading}
+          history={history}
+          currentId={analysis?.id || null}
+          onSelectHistory={handleSelectHistory}
+          onDeleteHistory={handleDeleteHistory}
         />
         
         <div className="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">

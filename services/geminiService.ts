@@ -10,13 +10,19 @@ export async function analyzeGoldMarket(
   profitTarget: number
 ): Promise<{ analysis: MarketAnalysis; plan: TradePlan | null }> {
   try {
+    const riskInstructions = {
+      [RiskPreference.CONSERVATIVE]: "Focus on Daily/Weekly major reversals. Use wide stops and safe targets. High win-rate priority.",
+      [RiskPreference.BALANCED]: "Focus on H4/H1 swing levels. Standard 1:2 or 1:3 Risk-to-Reward. Balanced approach.",
+      [RiskPreference.AGGRESSIVE]: "Focus on M15/M5 intraday scalps and momentum breakouts. Use very tight stops (max 20-30 pips) and seek aggressive profit targets at next immediate liquidity. High risk, high reward mindset."
+    };
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Perform a detailed technical analysis for XAU/USD (Gold) based on real-time data. 
       Focus on Support & Resistance (S/R) zones. 
       User parameters: 
       - Lot Size: ${lotSize}
-      - Risk: ${riskPref}
+      - Risk Setting: ${riskPref} (${riskInstructions[riskPref]})
       - Profit Target: $${profitTarget}
 
       Determine:
@@ -25,7 +31,9 @@ export async function analyzeGoldMarket(
       3. Key S/R levels
       4. Liquidity Zones
       5. Session Bias (New York/London/Asia)
-      6. A PLANNED LIMIT ORDER (Do not suggest market entry at current price unless it is exactly at a level).
+      6. A PLANNED LIMIT ORDER matching the ${riskPref} profile.
+
+      IMPORTANT FOR AGGRESSIVE RISK: If risk is AGGRESSIVE, do NOT provide safe/wide zones. Provide a high-precision entry with a tight stop-loss and a target that maximizes RR, even if the win probability is lower.
 
       Provide the response in structured JSON.`,
       config: {
@@ -69,6 +77,7 @@ export async function analyzeGoldMarket(
 
     const result = JSON.parse(response.text);
     const groundingSources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const id = crypto.randomUUID();
 
     const plan: TradePlan | null = result.plan ? {
       ...result.plan,
@@ -79,6 +88,7 @@ export async function analyzeGoldMarket(
 
     const analysis: MarketAnalysis = {
       ...result.analysis,
+      id,
       groundingSources
     };
 

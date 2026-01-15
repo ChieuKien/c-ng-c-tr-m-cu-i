@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UserPreferences, RiskPreference } from '../types';
+import { UserPreferences, RiskPreference, AnalysisHistoryItem, TradeDirection } from '../types';
 import { Icons } from '../constants';
 
 interface SidebarProps {
@@ -8,9 +8,22 @@ interface SidebarProps {
   setPreferences: React.Dispatch<React.SetStateAction<UserPreferences>>;
   onAnalyze: () => void;
   isLoading: boolean;
+  history: AnalysisHistoryItem[];
+  currentId: string | null;
+  onSelectHistory: (item: AnalysisHistoryItem) => void;
+  onDeleteHistory: (id: string, e: React.MouseEvent) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ preferences, setPreferences, onAnalyze, isLoading }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  preferences, 
+  setPreferences, 
+  onAnalyze, 
+  isLoading, 
+  history, 
+  currentId,
+  onSelectHistory,
+  onDeleteHistory
+}) => {
   const lotOptions = [0.01, 0.05, 0.1, 0.5, 1.0];
 
   return (
@@ -84,7 +97,50 @@ const Sidebar: React.FC<SidebarProps> = ({ preferences, setPreferences, onAnalyz
         </div>
       </section>
 
-      <div className="mt-auto pt-6 border-t border-[#2a2a2a]">
+      {/* Analysis History Section */}
+      <section className="flex-1 overflow-hidden flex flex-col min-h-0">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex justify-between items-center">
+          Recent History
+          <span className="text-[10px] text-gray-600 font-normal">{history.length} runs</span>
+        </h3>
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+          {history.length === 0 ? (
+            <div className="text-[10px] text-gray-600 italic text-center py-4">No recent analyses</div>
+          ) : (
+            history.map((item) => (
+              <div 
+                key={item.id}
+                onClick={() => onSelectHistory(item)}
+                className={`group relative flex flex-col p-3 rounded border cursor-pointer transition-all ${
+                  currentId === item.id 
+                    ? 'border-yellow-500/50 bg-yellow-500/5' 
+                    : 'border-[#2a2a2a] bg-[#161616]/50 hover:bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <span className={`text-[10px] font-bold uppercase ${item.plan?.direction === TradeDirection.BUY ? 'text-green-500' : 'text-red-500'}`}>
+                    {item.plan?.direction || 'N/A'} @ {item.plan?.entryPrice.toFixed(1) || '---'}
+                  </span>
+                  <button 
+                    onClick={(e) => onDeleteHistory(item.id, e)}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 text-gray-600 transition-opacity"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex justify-between items-end">
+                  <span className="text-[9px] text-gray-500 font-mono">{item.timestamp}</span>
+                  <span className="text-[9px] text-gray-400 bg-[#2a2a2a] px-1.5 py-0.5 rounded uppercase">{item.preferences.riskPreference}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      <div className="pt-6 border-t border-[#2a2a2a]">
         <button
           onClick={onAnalyze}
           disabled={isLoading}
@@ -103,9 +159,6 @@ const Sidebar: React.FC<SidebarProps> = ({ preferences, setPreferences, onAnalyz
             </>
           )}
         </button>
-        <p className="text-[10px] text-gray-500 mt-4 text-center leading-relaxed italic">
-          AI will scan market structure for confluence zones.
-        </p>
       </div>
     </aside>
   );

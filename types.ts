@@ -31,6 +31,7 @@ export interface TradePlan {
 }
 
 export interface MarketAnalysis {
+  id: string;
   trend: 'Bullish' | 'Bearish' | 'Neutral';
   structure: string;
   volatility: string;
@@ -40,6 +41,14 @@ export interface MarketAnalysis {
   bias: string;
   newsWarnings: string[];
   groundingSources?: any[];
+}
+
+export interface AnalysisHistoryItem {
+  id: string;
+  timestamp: string;
+  analysis: MarketAnalysis;
+  plan: TradePlan | null;
+  preferences: UserPreferences;
 }
 
 export interface UserPreferences {
