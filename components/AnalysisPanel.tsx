@@ -10,7 +10,7 @@ interface AnalysisPanelProps {
 const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ analysis }) => {
   if (!analysis) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-gray-600 p-8 text-center border border-[#2a2a2a] rounded-lg bg-[#0d0d0d]">
+      <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-gray-600 p-8 text-center border border-[#2a2a2a] rounded-lg bg-[#0d0d0d]">
         <div className="p-4 rounded-full bg-[#161616] mb-4">
           <Icons.TrendingUp />
         </div>
@@ -21,14 +21,14 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ analysis }) => {
   }
 
   return (
-    <div className="space-y-6 h-full overflow-y-auto pr-2">
-      <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-5">
+    <div className="space-y-4 md:space-y-6 h-full overflow-y-auto xl:pr-2">
+      <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4 md:p-5">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Icons.TrendingUp />
           Market Context
         </h3>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
           <div className="bg-[#0d0d0d] p-3 rounded border border-[#2a2a2a]">
             <div className="text-[10px] text-gray-500 uppercase font-semibold mb-1">Bias</div>
             <div className={`text-sm font-bold ${analysis.trend === 'Bullish' ? 'text-green-500' : analysis.trend === 'Bearish' ? 'text-red-500' : 'text-yellow-500'}`}>
@@ -41,7 +41,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ analysis }) => {
           </div>
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-4">
           <div>
             <div className="text-[10px] text-gray-500 uppercase font-semibold mb-1">Market Structure</div>
             <p className="text-xs text-gray-300 leading-relaxed">{analysis.structure}</p>
@@ -53,7 +53,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ analysis }) => {
         </div>
       </div>
 
-      <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-5">
+      <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4 md:p-5">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">S/R Engine Levels</h3>
         <div className="space-y-4">
           <div>

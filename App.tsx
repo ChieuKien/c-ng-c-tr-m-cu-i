@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
 
@@ -44,6 +45,7 @@ const App: React.FC = () => {
   const handleAnalyze = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setIsSidebarOpen(false); // Close sidebar on mobile after starting analysis
     try {
       const result = await analyzeGoldMarket(
         preferences.lotSize,
@@ -74,6 +76,7 @@ const App: React.FC = () => {
     setAnalysis(item.analysis);
     setPlan(item.plan);
     setPreferences(item.preferences);
+    setIsSidebarOpen(false);
   }, []);
 
   const handleDeleteHistory = useCallback((id: string, e: React.MouseEvent) => {
@@ -86,10 +89,11 @@ const App: React.FC = () => {
   }, [analysis]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#0a0a0a]">
-      <Header />
+    <div className="h-screen flex flex-col bg-[#0a0a0a] overflow-hidden">
+      <Header onMenuClick={() => setIsSidebarOpen(true)} />
       
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex overflow-hidden relative">
+        {/* Sidebar / Drawer */}
         <Sidebar 
           preferences={preferences} 
           setPreferences={setPreferences} 
@@ -99,9 +103,12 @@ const App: React.FC = () => {
           currentId={analysis?.id || null}
           onSelectHistory={handleSelectHistory}
           onDeleteHistory={handleDeleteHistory}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
         
-        <div className="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6 overflow-y-auto">
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded text-sm mb-2 flex justify-between items-center animate-in slide-in-from-top duration-300">
               {error}
@@ -109,28 +116,28 @@ const App: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-full min-h-0">
+          <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6">
             {/* Chart Column */}
-            <div className="xl:col-span-2 flex flex-col gap-6 h-full min-h-0">
-              <div className="flex-1 min-h-[400px]">
+            <div className="xl:col-span-2 flex flex-col gap-4 md:gap-6">
+              <div className="h-[350px] md:h-[500px] xl:h-[600px]">
                 <TradingViewWidget />
               </div>
-              <div className="h-fit">
+              <div className="order-first xl:order-last">
                 <TradePlanCard plan={plan} />
               </div>
             </div>
 
             {/* Analysis Column */}
-            <div className="xl:col-span-1 h-full min-h-0">
+            <div className="xl:col-span-1">
               <AnalysisPanel analysis={analysis} />
             </div>
           </div>
         </div>
       </main>
 
-      <footer className="h-10 border-t border-[#2a2a2a] bg-[#0d0d0d] flex items-center justify-center px-6">
-        <p className="text-[9px] text-gray-500 uppercase tracking-widest text-center">
-          Risk Disclaimer: Educational purposes only. Gold trading involves substantial risk. AI does not guarantee profits.
+      <footer className="h-10 border-t border-[#2a2a2a] bg-[#0d0d0d] flex items-center justify-center px-6 shrink-0">
+        <p className="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest text-center px-4">
+          Risk Disclaimer: Educational purposes only. Gold trading involves substantial risk.
         </p>
       </footer>
     </div>
