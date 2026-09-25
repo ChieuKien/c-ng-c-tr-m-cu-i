@@ -348,14 +348,20 @@ async function share() {
   const lines = session.draws.map((d) => `• ${d.position.label}: ${d.card.vi}${d.reversed ? ' (ngược)' : ''} — ${d.reversed ? d.card.keysRev : d.card.keysUp}`);
   const text = [`${BRAND.name} · ${spread.name}`, session.question && `“${session.question}”`, ...lines].filter(Boolean).join('\n');
   const url = location.href.split('#')[0];
-  try {
-    if (navigator.share) await navigator.share({ title: BRAND.name, text, url });
-    else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      toast('Đã sao chép kết quả');
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: BRAND.name, text, url });
+      return;
+    } catch (err) {
+      if (err?.name === 'AbortError') return; // người dùng tự huỷ
+      // trình duyệt/khung nhúng từ chối chia sẻ → chuyển sang sao chép
     }
+  }
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    toast('Đã sao chép kết quả');
   } catch {
-    /* người dùng huỷ chia sẻ */
+    toast('Không sao chép được. Bạn có thể chụp màn hình kết quả để chia sẻ.');
   }
 }
 
